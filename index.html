@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sean Desktop Backtesting</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">S</div>
+          <div>
+            <strong>Sean</strong>
+            <span>Desktop Backtesting</span>
+          </div>
+        </div>
+        <div class="symbol-search">
+          <i data-lucide="search"></i>
+          <input id="symbolSearch" type="search" placeholder="Search stocks or futures, e.g. AAPL, MSFT, MES" autocomplete="off" />
+          <div id="searchResults" class="search-results"></div>
+        </div>
+        <div class="top-actions">
+          <button id="settingsButton" class="icon-btn" type="button" title="Settings"><i data-lucide="settings"></i></button>
+          <button id="themeButton" class="icon-btn" type="button" title="Canvas color"><i data-lucide="palette"></i></button>
+        </div>
+      </header>
+
+      <aside class="watchlist panel">
+        <div class="panel-head">
+          <div>
+            <span>Watchlist</span>
+            <strong>Markets</strong>
+          </div>
+        </div>
+        <div id="watchlistRows" class="watchlist-rows"></div>
+      </aside>
+
+      <main class="chart-stage">
+        <section class="chart-header">
+          <div>
+            <div class="ticker-line">
+              <strong id="activeSymbol">AAPL</strong>
+              <span id="activeName">Apple Inc.</span>
+              <span id="marketStatus" class="status-dot"></span>
+            </div>
+            <div id="quoteLine" class="quote-line">--</div>
+          </div>
+          <div class="header-controls">
+            <button id="intervalButton" class="interval-button" type="button">10m</button>
+            <div id="intervalMenu" class="interval-menu"></div>
+            <button id="paperButton" class="trade-toggle" type="button"><i data-lucide="dollar-sign"></i> Paper Trading</button>
+          </div>
+        </section>
+
+        <section id="paperTicket" class="paper-ticket hidden">
+          <button id="sellButton" class="sell" type="button">Sell</button>
+          <label>
+            <span>Qty</span>
+            <input id="paperQty" type="number" min="1" step="1" value="1" />
+          </label>
+          <button id="buyButton" class="buy" type="button">Buy</button>
+          <small>No real money. No real orders. Simulated paper trading only.</small>
+        </section>
+
+        <canvas id="chartCanvas"></canvas>
+        <div id="crosshairTime" class="crosshair-label hidden"></div>
+        <div id="crosshairPrice" class="crosshair-label price hidden"></div>
+
+        <div id="toolRail" class="tool-rail vertical">
+          <button data-tool="cursor" class="active" title="Cursor"><i data-lucide="mouse-pointer-2"></i></button>
+          <button data-tool="trend" title="Trend line"><i data-lucide="line-chart"></i></button>
+          <button data-tool="brush" title="Brush"><i data-lucide="paintbrush"></i></button>
+          <button data-tool="horizontal" title="Horizontal line"><i data-lucide="minus"></i></button>
+          <button data-tool="rectangle" title="Rectangle"><i data-lucide="square"></i></button>
+          <button data-tool="vwap" title="VWAP"><span class="text-icon">VP</span></button>
+          <button data-tool="longPosition" class="long-tool" title="Long Position">L</button>
+          <button data-tool="shortPosition" class="short-tool" title="Short Position">S</button>
+          <button data-tool="undo" title="Undo"><i data-lucide="undo-2"></i></button>
+          <button data-tool="eraser" title="Eraser"><i data-lucide="eraser"></i></button>
+          <button data-tool="measure" title="Measure"><i data-lucide="ruler"></i></button>
+          <button data-tool="ray" title="Ray"><i data-lucide="move-up-right"></i></button>
+          <button data-tool="fib" title="Fib Retracement"><span class="fib-icon"></span></button>
+          <button id="railHandle" class="rail-handle" title="Move toolbar"><i data-lucide="grip"></i></button>
+        </div>
+
+        <button id="replayTab" class="replay-tab" type="button"><i data-lucide="rewind"></i><span>Replay</span></button>
+        <section id="replayBar" class="replay-bar hidden">
+          <button id="replayClose" type="button"><i data-lucide="rewind"></i><span>Replay</span></button>
+          <div id="replayChooser" class="replay-chooser">
+            <button id="selectReplayStart" type="button">Select Start</button>
+            <button id="randomReplayStart" type="button">Random</button>
+          </div>
+          <div id="replayControls" class="replay-controls hidden">
+            <button id="stepBack" type="button"><i data-lucide="skip-back"></i></button>
+            <button id="playPause" type="button"><i data-lucide="play"></i></button>
+            <button id="stepForward" type="button"><i data-lucide="skip-forward"></i></button>
+            <label>Speed <select id="replaySpeed"></select></label>
+            <label>Updates <select id="replayUpdates"></select></label>
+            <span id="replayTime">--</span>
+          </div>
+        </section>
+      </main>
+
+      <aside class="side panel">
+        <nav class="tabs">
+          <button class="active" data-tab="orders" type="button">Paper</button>
+          <button data-tab="calendar" type="button">Explore</button>
+          <button data-tab="stats" type="button">Stats</button>
+        </nav>
+
+        <section id="ordersTab" class="tab-panel active">
+          <div class="account-grid">
+            <div><span>Equity</span><strong id="equity">$100,000</strong></div>
+            <div><span>Cash</span><strong id="cash">$100,000</strong></div>
+            <div><span>Open P/L</span><strong id="openPL">$0</strong></div>
+            <div><span>Realized</span><strong id="realizedPL">$0</strong></div>
+          </div>
+          <h3>Pending Orders</h3>
+          <div id="pendingOrders" class="list"></div>
+          <h3>Open Positions</h3>
+          <div id="openPositions" class="list"></div>
+          <h3>Trade History</h3>
+          <div id="tradeHistory" class="list"></div>
+        </section>
+
+        <section id="calendarTab" class="tab-panel">
+          <div class="calendar-filter">
+            <select id="calendarCurrency"></select>
+            <select id="calendarRange">
+              <option value="upcoming">Upcoming</option>
+              <option value="today">Today</option>
+              <option value="tomorrow">Tomorrow</option>
+              <option value="week">This Week</option>
+            </select>
+          </div>
+          <div id="calendarRows" class="calendar-rows"></div>
+        </section>
+
+        <section id="statsTab" class="tab-panel">
+          <div id="performanceStats" class="stats-list"></div>
+        </section>
+      </aside>
+    </div>
+  </body>
+</html>
