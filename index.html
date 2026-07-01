@@ -105,11 +105,12 @@
         </section>
       </main>
 
-      <aside class="side panel">
+      <aside id="sideDrawer" class="side panel collapsed" aria-label="Trading panels">
         <nav class="tabs">
           <button class="active" data-tab="orders" type="button">Paper</button>
           <button data-tab="calendar" type="button">Explore</button>
           <button data-tab="stats" type="button">Stats</button>
+          <button id="drawerClose" class="drawer-close" type="button" title="Close panel"><i data-lucide="x"></i></button>
         </nav>
 
         <section id="ordersTab" class="tab-panel active">

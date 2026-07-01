@@ -46,6 +46,7 @@ const defaultEvents = [
 ];
 
 const els = {
+  appShell: document.querySelector(".app-shell"),
   canvas: document.querySelector("#chartCanvas"),
   search: document.querySelector("#symbolSearch"),
   results: document.querySelector("#searchResults"),
@@ -89,6 +90,8 @@ const els = {
   calendarRange: document.querySelector("#calendarRange"),
   calendarRows: document.querySelector("#calendarRows"),
   performanceStats: document.querySelector("#performanceStats"),
+  sideDrawer: document.querySelector("#sideDrawer"),
+  drawerClose: document.querySelector("#drawerClose"),
   themeButton: document.querySelector("#themeButton")
 };
 
@@ -989,6 +992,18 @@ function renderCalendar() {
   update();
 }
 
+function openPanel(tabName) {
+  els.sideDrawer.classList.remove("collapsed");
+  els.appShell.classList.add("drawer-open");
+  document.querySelectorAll(".tabs button[data-tab]").forEach((item) => item.classList.toggle("active", item.dataset.tab === tabName));
+  document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `${tabName}Tab`));
+}
+
+function closePanel() {
+  els.sideDrawer.classList.add("collapsed");
+  els.appShell.classList.remove("drawer-open");
+}
+
 function attachEvents() {
   els.search.addEventListener("input", () => {
     const rows = searchSymbols(els.search.value);
@@ -1074,10 +1089,10 @@ function attachEvents() {
     if (state.replay.playing) startReplayPlayback();
   });
   els.replayUpdates.addEventListener("change", () => { state.replay.updates = Number(els.replayUpdates.value); });
-  document.querySelectorAll(".tabs button").forEach((button) => button.addEventListener("click", () => {
-    document.querySelectorAll(".tabs button").forEach((item) => item.classList.toggle("active", item === button));
-    document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `${button.dataset.tab}Tab`));
+  document.querySelectorAll(".tabs button[data-tab]").forEach((button) => button.addEventListener("click", () => {
+    openPanel(button.dataset.tab);
   }));
+  els.drawerClose.addEventListener("click", closePanel);
   els.themeButton.addEventListener("click", () => {
     const colors = ["#f4f6f9", "#ffffff", "#fdf2f8", "#eef2ff", "#ecfeff", "#f0fdf4", "#fff7ed"];
     const current = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
