@@ -454,7 +454,7 @@ button {
 
 .tool-rail {
   position: absolute;
-  right: 18px;
+  right: 118px;
   top: 50%;
   z-index: 12;
   display: flex;
@@ -464,11 +464,17 @@ button {
   background: var(--toolbar);
   color: #f7f7f8;
   box-shadow: var(--shadow);
-  transition: right 180ms ease;
+  touch-action: none;
+  transition: right 180ms ease, width 160ms ease, height 160ms ease;
 }
 
 .app-shell.drawer-open .tool-rail.vertical {
   right: 410px;
+}
+
+.tool-rail.is-positioned {
+  right: auto;
+  transform: none;
 }
 
 .tool-rail.vertical {
@@ -484,6 +490,27 @@ button {
   height: 58px;
   flex-direction: row;
   overflow-x: auto;
+}
+
+.tool-rail.vertical.is-positioned,
+.tool-rail.horizontal.is-positioned {
+  transform: none;
+}
+
+.tool-rail.collapsed {
+  overflow: hidden;
+}
+
+.tool-rail.vertical.collapsed {
+  width: 58px;
+}
+
+.tool-rail.horizontal.collapsed {
+  width: 105px;
+}
+
+.tool-rail.collapsed [data-tool] {
+  display: none;
 }
 
 .tool-rail button {
@@ -542,6 +569,14 @@ button {
 
 .rail-handle {
   cursor: move;
+}
+
+.rail-collapse {
+  cursor: pointer;
+}
+
+.tool-rail.dragging {
+  transition: none;
 }
 
 .replay-tab {

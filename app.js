@@ -47,6 +47,7 @@ const defaultEvents = [
 
 const els = {
   appShell: document.querySelector(".app-shell"),
+  chartStage: document.querySelector(".chart-stage"),
   canvas: document.querySelector("#chartCanvas"),
   search: document.querySelector("#symbolSearch"),
   results: document.querySelector("#searchResults"),
@@ -64,6 +65,7 @@ const els = {
   sellButton: document.querySelector("#sellButton"),
   toolRail: document.querySelector("#toolRail"),
   railHandle: document.querySelector("#railHandle"),
+  railCollapse: document.querySelector("#railCollapse"),
   replayTab: document.querySelector("#replayTab"),
   replayBar: document.querySelector("#replayBar"),
   replayClose: document.querySelector("#replayClose"),
@@ -132,7 +134,11 @@ const state = {
     x: null,
     y: null,
     dragging: false,
-    orientation: "vertical"
+    moved: false,
+    offsetX: 0,
+    offsetY: 0,
+    orientation: "vertical",
+    collapsed: false
   }
 };
 
@@ -728,6 +734,43 @@ function setTool(tool) {
   document.querySelectorAll("#toolRail [data-tool]").forEach((button) => button.classList.toggle("active", button.dataset.tool === state.activeTool));
 }
 
+function clampToolbarPosition(x, y) {
+  const stage = els.chartStage.getBoundingClientRect();
+  const rail = els.toolRail.getBoundingClientRect();
+  return {
+    x: Math.min(Math.max(0, x), Math.max(0, stage.width - rail.width)),
+    y: Math.min(Math.max(0, y), Math.max(0, stage.height - rail.height))
+  };
+}
+
+function applyToolbarPosition(x, y) {
+  const point = clampToolbarPosition(x, y);
+  state.toolbar.x = point.x;
+  state.toolbar.y = point.y;
+  els.toolRail.classList.add("is-positioned");
+  els.toolRail.style.left = `${point.x}px`;
+  els.toolRail.style.top = `${point.y}px`;
+  els.toolRail.style.right = "auto";
+}
+
+function updateToolbarCollapseIcon() {
+  const icon = state.toolbar.orientation === "vertical"
+    ? (state.toolbar.collapsed ? "chevron-right" : "chevron-left")
+    : (state.toolbar.collapsed ? "chevron-down" : "chevron-up");
+  els.railCollapse.title = state.toolbar.collapsed ? "Expand toolbar" : "Collapse toolbar";
+  els.railCollapse.innerHTML = `<i data-lucide="${icon}"></i>`;
+  if (window.lucide) lucide.createIcons();
+}
+
+function toggleToolbarCollapse() {
+  state.toolbar.collapsed = !state.toolbar.collapsed;
+  els.toolRail.classList.toggle("collapsed", state.toolbar.collapsed);
+  updateToolbarCollapseIcon();
+  if (Number.isFinite(state.toolbar.x) && Number.isFinite(state.toolbar.y)) {
+    requestAnimationFrame(() => applyToolbarPosition(state.toolbar.x, state.toolbar.y));
+  }
+}
+
 function pushUndo() {
   state.undoStack.push(JSON.stringify({ drawings: state.drawings, orders: state.paper.orders }));
   if (state.undoStack.length > 80) state.undoStack.shift();
@@ -1050,10 +1093,45 @@ function attachEvents() {
     const button = event.target.closest("[data-tool]");
     if (button) setTool(button.dataset.tool);
   });
+  els.railCollapse.addEventListener("click", toggleToolbarCollapse);
+  els.railHandle.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    els.railHandle.setPointerCapture(event.pointerId);
+    const rail = els.toolRail.getBoundingClientRect();
+    const stage = els.chartStage.getBoundingClientRect();
+    state.toolbar.dragging = true;
+    state.toolbar.moved = false;
+    state.toolbar.offsetX = event.clientX - rail.left;
+    state.toolbar.offsetY = event.clientY - rail.top;
+    state.toolbar.x = rail.left - stage.left;
+    state.toolbar.y = rail.top - stage.top;
+    els.toolRail.classList.add("dragging");
+  });
+  els.railHandle.addEventListener("pointermove", (event) => {
+    if (!state.toolbar.dragging) return;
+    const stage = els.chartStage.getBoundingClientRect();
+    const nextX = event.clientX - stage.left - state.toolbar.offsetX;
+    const nextY = event.clientY - stage.top - state.toolbar.offsetY;
+    if (Math.abs(nextX - state.toolbar.x) > 2 || Math.abs(nextY - state.toolbar.y) > 2) state.toolbar.moved = true;
+    applyToolbarPosition(nextX, nextY);
+  });
+  els.railHandle.addEventListener("pointerup", () => {
+    state.toolbar.dragging = false;
+    els.toolRail.classList.remove("dragging");
+  });
+  els.railHandle.addEventListener("pointercancel", () => {
+    state.toolbar.dragging = false;
+    els.toolRail.classList.remove("dragging");
+  });
   els.railHandle.addEventListener("dblclick", () => {
+    if (state.toolbar.moved) return;
     state.toolbar.orientation = state.toolbar.orientation === "vertical" ? "horizontal" : "vertical";
     els.toolRail.classList.toggle("vertical", state.toolbar.orientation === "vertical");
     els.toolRail.classList.toggle("horizontal", state.toolbar.orientation === "horizontal");
+    updateToolbarCollapseIcon();
+    if (Number.isFinite(state.toolbar.x) && Number.isFinite(state.toolbar.y)) {
+      requestAnimationFrame(() => applyToolbarPosition(state.toolbar.x, state.toolbar.y));
+    }
   });
   els.replayTab.addEventListener("click", () => {
     els.replayTab.classList.add("hidden");
@@ -1101,7 +1179,12 @@ function attachEvents() {
     draw();
   });
   attachCanvasEvents();
-  window.addEventListener("resize", draw);
+  window.addEventListener("resize", () => {
+    draw();
+    if (Number.isFinite(state.toolbar.x) && Number.isFinite(state.toolbar.y)) {
+      applyToolbarPosition(state.toolbar.x, state.toolbar.y);
+    }
+  });
 }
 
 function attachCanvasEvents() {
@@ -1260,6 +1343,7 @@ function hideCrosshairLabels() {
 
 function init() {
   if (window.lucide) lucide.createIcons();
+  updateToolbarCollapseIcon();
   attachEvents();
   renderCalendar();
   renderPaper();

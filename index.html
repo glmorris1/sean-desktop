@@ -4,9 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sean Desktop Backtesting</title>
-    <link rel="stylesheet" href="styles.css?v=chart-first-20260630" />
+    <link rel="stylesheet" href="styles.css?v=toolbar-20260702" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
-    <script src="app.js?v=chart-first-20260630" defer></script>
+    <script src="app.js?v=toolbar-20260702" defer></script>
   </head>
   <body>
     <div class="app-shell">
@@ -71,6 +71,8 @@
         <div id="crosshairPrice" class="crosshair-label price hidden"></div>
 
         <div id="toolRail" class="tool-rail vertical">
+          <button id="railHandle" class="rail-handle" title="Move toolbar" type="button"><i data-lucide="grip"></i></button>
+          <button id="railCollapse" class="rail-collapse" title="Collapse toolbar" type="button"><i data-lucide="chevron-left"></i></button>
           <button data-tool="cursor" class="active" title="Cursor"><i data-lucide="mouse-pointer-2"></i></button>
           <button data-tool="trend" title="Trend line"><i data-lucide="line-chart"></i></button>
           <button data-tool="brush" title="Brush"><i data-lucide="paintbrush"></i></button>
@@ -84,7 +86,6 @@
           <button data-tool="measure" title="Measure"><i data-lucide="ruler"></i></button>
           <button data-tool="ray" title="Ray"><i data-lucide="move-up-right"></i></button>
           <button data-tool="fib" title="Fib Retracement"><span class="fib-icon"></span></button>
-          <button id="railHandle" class="rail-handle" title="Move toolbar"><i data-lucide="grip"></i></button>
         </div>
 
         <button id="replayTab" class="replay-tab" type="button"><i data-lucide="rewind"></i><span>Replay</span></button>
